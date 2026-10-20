@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: booking-back
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/main
+    healthCheckPath: /api/slots
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
