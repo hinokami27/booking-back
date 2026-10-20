@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenRouterService } from '../openrouter/openrouter.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
+import { UpdateSlotDto } from './dto/update-slot.dto';
 import { BookSlotDto } from './dto/book-slot.dto';
 import { BookedTimeSlot, TimeSlot } from './types/time-slot';
 
@@ -30,6 +31,37 @@ export class SlotsService {
         duration: dto.duration,
       },
     });
+  }
+
+  async update(id: string, dto: UpdateSlotDto): Promise<TimeSlot> {
+    const existing = await this.prisma.timeSlot.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Time slot ${id} was not found.`);
+    }
+
+    return this.prisma.timeSlot.update({
+      where: { id },
+      data: {
+        ...(dto.date !== undefined && { date: dto.date }),
+        ...(dto.startTime !== undefined && { startTime: dto.startTime }),
+        ...(dto.duration !== undefined && { duration: dto.duration }),
+      },
+    });
+  }
+
+  async remove(id: string): Promise<void> {
+    const existing = await this.prisma.timeSlot.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Time slot ${id} was not found.`);
+    }
+
+    await this.prisma.timeSlot.delete({ where: { id } });
   }
 
   async book(id: string, dto: BookSlotDto): Promise<BookedTimeSlot> {

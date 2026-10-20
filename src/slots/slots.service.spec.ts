@@ -10,7 +10,9 @@ describe('SlotsService', () => {
       findMany: jest.Mock;
       create: jest.Mock;
       findUnique: jest.Mock;
+      update: jest.Mock;
       updateMany: jest.Mock;
+      delete: jest.Mock;
       findUniqueOrThrow: jest.Mock;
     };
   };
@@ -22,7 +24,9 @@ describe('SlotsService', () => {
         findMany: jest.fn(),
         create: jest.fn(),
         findUnique: jest.fn(),
+        update: jest.fn(),
         updateMany: jest.fn(),
+        delete: jest.fn(),
         findUniqueOrThrow: jest.fn(),
       },
     };
@@ -63,6 +67,64 @@ describe('SlotsService', () => {
         duration: 30,
       }),
     ).resolves.toEqual(created);
+  });
+
+  it('updates a slot with only the provided fields', async () => {
+    prisma.timeSlot.findUnique.mockResolvedValue({ id: 'slot-1', isBooked: false });
+    prisma.timeSlot.update.mockResolvedValue({
+      id: 'slot-1',
+      date: '2026-10-22',
+      startTime: '14:00',
+      duration: 30,
+      isBooked: false,
+      guestName: null,
+      guestEmail: null,
+      createdAt: new Date(),
+    });
+
+    await expect(service.update('slot-1', { date: '2026-10-22' })).resolves.toMatchObject({
+      date: '2026-10-22',
+    });
+    expect(prisma.timeSlot.update).toHaveBeenCalledWith({
+      where: { id: 'slot-1' },
+      data: { date: '2026-10-22' },
+    });
+  });
+
+  it('updates a booked slot without restrictions', async () => {
+    prisma.timeSlot.findUnique.mockResolvedValue({
+      id: 'slot-1',
+      isBooked: true,
+    });
+    prisma.timeSlot.update.mockResolvedValue({ id: 'slot-1', duration: 45, isBooked: true });
+
+    await expect(service.update('slot-1', { duration: 45 })).resolves.toMatchObject({
+      duration: 45,
+    });
+  });
+
+  it('rejects updating a missing slot', async () => {
+    prisma.timeSlot.findUnique.mockResolvedValue(null);
+
+    await expect(service.update('missing', { duration: 45 })).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prisma.timeSlot.update).not.toHaveBeenCalled();
+  });
+
+  it('deletes an existing slot', async () => {
+    prisma.timeSlot.findUnique.mockResolvedValue({ id: 'slot-1' });
+    prisma.timeSlot.delete.mockResolvedValue({ id: 'slot-1' });
+
+    await expect(service.remove('slot-1')).resolves.toBeUndefined();
+    expect(prisma.timeSlot.delete).toHaveBeenCalledWith({ where: { id: 'slot-1' } });
+  });
+
+  it('rejects deleting a missing slot', async () => {
+    prisma.timeSlot.findUnique.mockResolvedValue(null);
+
+    await expect(service.remove('missing')).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.timeSlot.delete).not.toHaveBeenCalled();
   });
 
   it('rejects booking a missing slot', async () => {

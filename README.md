@@ -25,6 +25,8 @@ Fill `OPENROUTER_API_KEY` in `.env` from [OpenRouter](https://openrouter.ai/keys
 | --- | --- | --- |
 | GET | `/api/slots` | List all time slots |
 | POST | `/api/slots` | Host creates a slot `{ date, startTime, duration }` |
+| PATCH | `/api/slots/:id` | Update a slot `{ date?, startTime?, duration? }` (allowed even when booked) |
+| DELETE | `/api/slots/:id` | Delete a slot, `204 No Content` (allowed even when booked) |
 | POST | `/api/slots/:id/book` | Guest books a slot `{ guestName, guestEmail }` |
 
 Double-booking a slot returns `400 Bad Request`. Successful bookings include `aiConfirmationMessage`.
